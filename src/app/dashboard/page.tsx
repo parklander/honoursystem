@@ -24,12 +24,20 @@ export default function DashboardPage() {
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold">Dashboard</h1>
-          <button
-            onClick={() => signOut()}
-            className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors"
-          >
-            Sign Out
-          </button>
+          <div className="space-x-4">
+            <button
+              onClick={() => router.push('/profile')}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+            >
+              Profile Settings
+            </button>
+            <button
+              onClick={() => signOut()}
+              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors"
+            >
+              Sign Out
+            </button>
+          </div>
         </div>
 
         <div className="bg-gray-800 rounded-lg p-6 shadow-xl">

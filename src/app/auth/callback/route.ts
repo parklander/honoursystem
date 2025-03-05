@@ -29,10 +29,11 @@ export async function GET(request: Request) {
 
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
-      return NextResponse.redirect('https://honoursystem.vercel.app/dashboard');
+      // Use the same origin as the request for the redirect
+      return NextResponse.redirect(new URL('/dashboard', requestUrl.origin));
     }
   }
 
   // Return the user to an error page with instructions
-  return NextResponse.redirect('https://honoursystem.vercel.app/auth/auth-code-error');
+  return NextResponse.redirect(new URL('/auth/auth-code-error', requestUrl.origin));
 } 
