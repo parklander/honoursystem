@@ -44,14 +44,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [supabase, router]);
 
   const signInWithDiscord = async () => {
-    const redirectUrl = process.env.NODE_ENV === 'production'
-      ? 'https://honoursystem.vercel.app/auth/callback'
-      : `${window.location.origin}/auth/callback`;
-
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'discord',
       options: {
-        redirectTo: redirectUrl,
+        redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`,
       },
     });
 
