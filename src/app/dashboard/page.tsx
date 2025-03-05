@@ -3,6 +3,7 @@
 import { useAuth } from '@/lib/auth/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import Image from 'next/image';
 
 export default function DashboardPage() {
   const { user, signOut } = useAuth();
@@ -37,11 +38,15 @@ export default function DashboardPage() {
           <div className="space-y-4">
             <div className="flex items-center space-x-4">
               {user.user_metadata.avatar_url && (
-                <img
-                  src={user.user_metadata.avatar_url}
-                  alt="Profile"
-                  className="w-16 h-16 rounded-full"
-                />
+                <div className="relative w-16 h-16">
+                  <Image
+                    src={user.user_metadata.avatar_url}
+                    alt="Profile"
+                    fill
+                    className="rounded-full object-cover"
+                    sizes="64px"
+                  />
+                </div>
               )}
               <div>
                 <p className="text-gray-300">Email: {user.email}</p>
