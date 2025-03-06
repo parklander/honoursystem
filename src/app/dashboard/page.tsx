@@ -2,18 +2,41 @@
 
 import { useAuth } from '@/lib/auth/AuthContext';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
+import { createBrowserClient } from '@supabase/ssr';
 
 export default function DashboardPage() {
   const { user, signOut } = useAuth();
   const router = useRouter();
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
 
   useEffect(() => {
     if (!user) {
       router.push('/login');
     }
   }, [user, router]);
+
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      if (!user) return;
+      
+      const { data } = await supabase
+        .from('user_profiles')
+        .select('roles')
+        .eq('id', user.id)
+        .single();
+      
+      setIsAdmin(data?.roles?.includes('admin') || false);
+    };
+    
+    checkAdminStatus();
+  }, [user, supabase]);
 
   if (!user) {
     return null;
@@ -31,6 +54,14 @@ export default function DashboardPage() {
             >
               Profile Settings
             </button>
+            {isAdmin && (
+              <button
+                onClick={() => router.push('/admin/roles')}
+                className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors"
+              >
+                Manage Roles
+              </button>
+            )}
             <button
               onClick={() => signOut()}
               className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors"
@@ -45,17 +76,32 @@ export default function DashboardPage() {
           
           <div className="space-y-4">
             <div className="flex items-center space-x-4">
-              {user.user_metadata.avatar_url && (
-                <div className="relative w-16 h-16">
+              <div className="relative w-16 h-16">
+                {user.user_metadata.avatar_url ? (
                   <Image
                     src={user.user_metadata.avatar_url}
                     alt="Profile"
                     fill
                     className="rounded-full object-cover"
                     sizes="64px"
+                    onError={(e) => {
+                      // If image fails to load, replace with fallback
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                      target.parentElement?.classList.add('bg-gray-600', 'flex', 'items-center', 'justify-center');
+                      target.parentElement!.innerHTML = `<span class="text-2xl text-white">${
+                        (user.user_metadata.full_name || user.email || 'U')[0].toUpperCase()
+                      }</span>`;
+                    }}
                   />
-                </div>
-              )}
+                ) : (
+                  <div className="w-16 h-16 bg-gray-600 rounded-full flex items-center justify-center">
+                    <span className="text-2xl text-white">
+                      {(user.user_metadata.full_name || user.email || 'U')[0].toUpperCase()}
+                    </span>
+                  </div>
+                )}
+              </div>
               <div>
                 <p className="text-gray-300">Email: {user.email}</p>
                 <p className="text-gray-300">Discord ID: {user.user_metadata.provider_id}</p>

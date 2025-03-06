@@ -1,9 +1,9 @@
 'use client';
 
+import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { createBrowserClient } from '@supabase/ssr';
 
 interface UserProfile {
   id: string;
@@ -25,10 +25,7 @@ export default function ProfilePage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  const supabase = createClient();
 
   useEffect(() => {
     if (!user) {
@@ -44,26 +41,50 @@ export default function ProfilePage() {
 
     const fetchProfile = async () => {
       try {
-        console.log('Fetching profile for user:', user.id);
+        // First check auth status
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        console.log('Auth Session:', {
+          session,
+          error: sessionError,
+          accessToken: session?.access_token
+        });
+
+        if (!session) {
+          console.log('No session found, redirecting to login');
+          router.push('/login');
+          return;
+        }
+
+        // Try to get the profile
+        console.log('Attempting to fetch profile for user:', user?.id);
+        
         const { data, error } = await supabase
           .from('user_profiles')
-          .select('*')
-          .eq('id', user.id)
+          .select('id, full_name, roles, membership_status')
+          .eq('id', user?.id)
           .single();
+
+        console.log('Profile query result:', {
+          userId: user?.id,
+          data,
+          error
+        });
 
         if (error) {
           console.error('Supabase error details:', {
             code: error.code,
             message: error.message,
             details: error.details,
-            hint: error.hint
+            hint: error.hint,
+            status: error.status
           });
           throw error;
         }
+
         setProfile(data);
       } catch (err) {
+        console.error('Full error:', err);
         setError('Failed to load profile');
-        console.error('Error loading profile:', err);
       } finally {
         setLoading(false);
       }
