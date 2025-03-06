@@ -4,6 +4,7 @@ import { useAuth } from '@/lib/auth/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { PostgrestError } from '@supabase/supabase-js';
 
 interface UserWithRoles {
   id: string;
@@ -80,7 +81,10 @@ export default function RoleManagementPage() {
         // Fetch all users with their roles
         const { data, error: usersError } = await supabase
           .from('user_profiles')
-          .select('id, full_name, roles, membership_status') as { data: UserProfileRow[] | null, error: any };
+          .select('id, full_name, roles, membership_status') as { 
+            data: UserProfileRow[] | null, 
+            error: PostgrestError | null 
+          };
 
         console.log('Users data:', {
           data: data,
