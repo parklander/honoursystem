@@ -3,12 +3,30 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/auth/AuthContext';
+import { useEffect, useState } from 'react';
+import { createClientClient } from '@/lib/supabase/client';
 
 export default function Sidebar() {
   const pathname = usePathname();
   const { user } = useAuth();
+  const [isAdmin, setIsAdmin] = useState(false);
+  const supabase = createClientClient();
 
-  const isAdmin = user?.roles?.includes('admin');
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      if (!user) return;
+      
+      const { data } = await supabase
+        .from('user_profiles')
+        .select('roles')
+        .eq('id', user.id)
+        .single();
+      
+      setIsAdmin(data?.roles?.includes('admin') || false);
+    };
+    
+    checkAdminStatus();
+  }, [user, supabase]);
 
   const links = [
     { href: '/dashboard', label: 'Dashboard' },
