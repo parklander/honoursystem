@@ -70,7 +70,9 @@ export default function ProfilePage() {
         const { data, error } = await supabase
           .from('user_profiles')
           .select('*')
-          .single();
+          .eq('id', user?.id)
+          .limit(1)
+          .maybeSingle();
 
         console.log('Profile query result:', {
           userId: user?.id,
@@ -90,6 +92,11 @@ export default function ProfilePage() {
             console.error('Unknown error:', error);
           }
           throw error;
+        }
+
+        if (!data) {
+          toast.error('Profile not found');
+          return;
         }
 
         setProfile({
