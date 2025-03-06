@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { PostgrestError } from 'supabase';
 
 interface UserProfile {
   id: string;
@@ -71,13 +72,16 @@ export default function ProfilePage() {
         });
 
         if (error) {
-          console.error('Supabase error details:', {
-            code: error.code,
-            message: error.message,
-            details: error.details,
-            hint: error.hint,
-            status: error.status
-          });
+          if (error instanceof PostgrestError) {
+            console.error('Database error:', {
+              message: error.message,
+              details: error.details,
+              hint: error.hint,
+              code: error.code
+            });
+          } else {
+            console.error('Unknown error:', error);
+          }
           throw error;
         }
 
