@@ -3,8 +3,16 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { Database } from '@/lib/database.types';
 
-type ConsumablePurchase = Database['public']['Tables']['consumable_purchases']['Row'] & {
-  consumables: Database['public']['Tables']['consumables']['Row'] | null;
+type ConsumablePurchase = {
+  id: string;
+  updated_at: string;
+  status: 'paid' | 'unpaid';
+  total_price: number;
+  quantity: number;
+  consumables: {
+    name: string;
+    unit: string;
+  } | null;
 };
 
 export default async function OrderHistoryPage() {
@@ -15,7 +23,7 @@ export default async function OrderHistoryPage() {
     return <div>Please log in to view your order history</div>;
   }
 
-  const { data: orders, error: ordersError } = await supabase
+  const { data, error: ordersError } = await supabase
     .from('consumable_purchases')
     .select(`
       id,
@@ -28,16 +36,15 @@ export default async function OrderHistoryPage() {
         unit
       )
     `)
-    .eq('user_id', user.id)
-    .order('updated_at', { ascending: false })
-    .returns<ConsumablePurchase[]>();
+    .eq('user_id', user.id as string)
+    .order('updated_at', { ascending: false });
 
   if (ordersError) {
     console.error('Error fetching orders:', ordersError);
     return <div>Error loading order history</div>;
   }
 
-  console.log('Orders with consumables:', orders);
+  const orders = data as ConsumablePurchase[];
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white p-8">
