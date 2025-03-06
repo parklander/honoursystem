@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { createClientClient } from '@/lib/supabase/client';
+import { createClientSupabaseClient } from '@/lib/supabase/client';
 import { Database } from '@/lib/database.types';
 import { toast } from 'react-hot-toast';
 
@@ -12,7 +12,7 @@ export default function CheckoutPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [cartItems, setCartItems] = useState<Array<{ item: Consumable; quantity: number }>>([]);
-  const supabase = createClientClient();
+  const supabase = createClientSupabaseClient();
 
   useEffect(() => {
     const fetchCartItems = async () => {

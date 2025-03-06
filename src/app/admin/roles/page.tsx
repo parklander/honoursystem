@@ -3,7 +3,7 @@
 import { useAuth } from '@/lib/auth/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { createClientClient } from '@/lib/supabase/client';
+import { createClientSupabaseClient } from '@/lib/supabase/client';
 import { PostgrestError } from '@supabase/supabase-js';
 import { toast } from 'react-hot-toast';
 
@@ -45,7 +45,7 @@ export default function RoleManagementPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  const supabase = createClientClient();
+  const supabase = createClientSupabaseClient();
 
   useEffect(() => {
     if (!user) {

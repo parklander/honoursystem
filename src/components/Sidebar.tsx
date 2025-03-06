@@ -4,14 +4,14 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { useEffect, useState } from 'react';
-import { createClientClient } from '@/lib/supabase/client';
+import { createClientSupabaseClient } from '@/lib/supabase/client';
 
 export default function Sidebar() {
   const pathname = usePathname();
   const { user } = useAuth();
   const [isAdmin, setIsAdmin] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
-  const supabase = createClientClient();
+  const supabase = createClientSupabaseClient();
 
   useEffect(() => {
     const checkAdminStatus = async () => {
@@ -39,7 +39,10 @@ export default function Sidebar() {
     { href: '/shop', label: 'Shop' },
     { href: '/orders', label: 'Orders' },
     { href: '/profile', label: 'Profile' },
-    ...(isAdmin ? [{ href: '/admin/roles', label: 'Role Management' }] : []),
+    ...(isAdmin ? [
+      { href: '/admin/roles', label: 'Role Management' },
+      { href: '/admin/balances', label: 'User Balances' }
+    ] : []),
   ];
 
   return (

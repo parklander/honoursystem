@@ -1,6 +1,6 @@
 'use client';
 
-import { createClientClient } from '@/lib/supabase/client';
+import { createClientSupabaseClient } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useMemo } from 'react';
@@ -29,7 +29,7 @@ export default function ProfilePage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  const supabase = useMemo(() => createClientClient(), []);
+  const supabase = useMemo(() => createClientSupabaseClient(), []);
 
   const handleError = (error: Error | PostgrestError) => {
     console.error('Error:', error);

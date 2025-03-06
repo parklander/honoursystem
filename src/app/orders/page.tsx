@@ -1,132 +1,109 @@
-'use client';
+'use server';
 
-import { useEffect, useState } from 'react';
-import { createClientClient } from '@/lib/supabase/client';
-import { toast } from 'react-hot-toast';
+import { createServerSupabaseClient } from '@/lib/supabase/server';
 
-type Purchase = {
-  id: string;
-  user_id: string;
-  consumable_id: string;
-  quantity: number;
-  total_price: number;
-  purchase_date: string;
-  notes: string | null;
-  status: 'unpaid' | 'paid';
-  consumable?: {
-    name: string;
-    description: string;
-    unit: string;
-    price: number;
-  };
-};
-
-export default function OrderHistoryPage() {
-  const [orders, setOrders] = useState<Purchase[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [totalOwed, setTotalOwed] = useState(0);
-  const supabase = createClientClient();
-
-  useEffect(() => {
-    fetchOrders();
-  }, []);
-
-  const fetchOrders = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
-
-      const { data: purchases, error } = await supabase
-        .from('consumable_purchases')
-        .select(`
-          *,
-          consumable:consumables (
-            name,
-            description,
-            unit,
-            price
-          )
-        `)
-        .eq('user_id', user.id)
-        .eq('status', 'unpaid')
-        .order('purchase_date', { ascending: false });
-
-      if (error) throw error;
-
-      setOrders(purchases || []);
-      setTotalOwed(purchases?.reduce((sum, p) => sum + Number(p.total_price), 0) || 0);
-    } catch (error) {
-      console.error('Error fetching orders:', error);
-      toast.error('Failed to load order history');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white flex items-center justify-center">
-        <div className="text-xl">Loading orders...</div>
-      </div>
-    );
+export default async function OrderHistoryPage() {
+  const supabase = createServerSupabaseClient();
+  
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    return <div>Please log in to view your order history</div>;
   }
 
+  const { data: orders, error: ordersError } = await supabase
+    .from('consumable_purchases')
+    .select(`
+      id,
+      updated_at,
+      status,
+      total_price,
+      quantity,
+      consumables!consumable_id(
+        name,
+        unit
+      )
+    `)
+    .eq('user_id', user.id)
+    .order('updated_at', { ascending: false });
+
+  if (ordersError) {
+    console.error('Error fetching orders:', ordersError);
+    return <div>Error loading order history</div>;
+  }
+
+  console.log('Orders with consumables:', orders);
+
   return (
-    <main className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white p-8">
+    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white p-8">
       <div className="container mx-auto">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">Order History</h1>
-          <div className="text-xl font-semibold">
-            Total Balance: <span className="text-red-400">${totalOwed.toFixed(2)}</span>
-          </div>
+          <h1 className="text-3xl font-bold">My Orders</h1>
         </div>
-
-        {orders.length === 0 ? (
-          <div className="text-center text-gray-400 py-8">
-            No unpaid orders found.
-          </div>
-        ) : (
-          <div className="space-y-6">
-            {orders.map((order) => (
-              <div key={order.id} className="bg-gray-800 rounded-lg p-6">
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <h3 className="text-xl font-semibold">{order.consumable?.name}</h3>
-                    <div className="text-sm text-gray-400">
-                      {formatDate(order.purchase_date)}
-                    </div>
-                  </div>
-                  <div className="text-xl font-semibold">
-                    ${Number(order.total_price).toFixed(2)}
-                  </div>
+        
+        <div className="space-y-6">
+          {orders?.map((order) => (
+            <div 
+              key={order.id} 
+              className="bg-gray-800 border border-gray-700 rounded-lg p-6 shadow"
+            >
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <p className="text-gray-400">
+                    Order ID: <span className="text-gray-300">{order.id}</span>
+                  </p>
+                  <p className="text-gray-400">
+                    Date: <span className="text-gray-300">
+                      {new Date(order.updated_at).toLocaleDateString()}
+                    </span>
+                  </p>
                 </div>
-                <div className="text-gray-300">
-                  <div>{order.consumable?.description}</div>
-                  <div className="text-sm text-gray-400">
-                    Quantity: {order.quantity} {order.consumable?.unit}
-                    {order.quantity !== 1 ? 's' : ''}
-                  </div>
+                <div className={`px-3 py-1 rounded-full text-sm font-medium ${
+                  order.status === 'paid'
+                    ? 'bg-green-900 text-green-300'
+                    : 'bg-yellow-900 text-yellow-300'
+                }`}>
+                  {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
                 </div>
-                {order.notes && (
-                  <div className="mt-2 text-sm text-gray-400">
-                    Note: {order.notes}
-                  </div>
-                )}
               </div>
-            ))}
-          </div>
-        )}
+              
+              <div className="mt-4">
+                <table className="w-full">
+                  <thead>
+                    <tr className="text-left text-gray-400">
+                      <th className="pb-3">Item</th>
+                      <th className="pb-3">Quantity</th>
+                      <th className="pb-3 text-right">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody className="text-gray-300">
+                    <tr>
+                      <td className="py-2">{order.consumables?.name || 'Unknown Item'}</td>
+                      <td className="py-2">
+                        {order.quantity} {order.consumables?.unit || 'units'}
+                      </td>
+                      <td className="py-2 text-right">
+                        ${order.total_price.toFixed(2)}
+                      </td>
+                    </tr>
+                    <tr className="font-medium text-white">
+                      <td colSpan={2} className="pt-4 text-right">Total:</td>
+                      <td className="pt-4 text-right">
+                        ${order.total_price.toFixed(2)}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ))}
+          
+          {(!orders || orders.length === 0) && (
+            <div className="text-center text-gray-400 py-12 bg-gray-800 rounded-lg">
+              You haven't placed any orders yet
+            </div>
+          )}
+        </div>
       </div>
-    </main>
+    </div>
   );
 } 

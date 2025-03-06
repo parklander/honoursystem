@@ -20,6 +20,8 @@ export type ConsumableCategory =
   | 'finishing'
   | 'other'
 
+export type OrderStatus = 'unpaid' | 'paid';
+
 export interface Database {
   public: {
     Tables: {
@@ -131,6 +133,7 @@ export interface Database {
           total_price: number
           purchase_date: string
           notes: string | null
+          status: OrderStatus
         }
         Insert: {
           id?: string
@@ -140,6 +143,7 @@ export interface Database {
           total_price: number
           purchase_date?: string
           notes?: string | null
+          status?: OrderStatus
         }
         Update: {
           id?: string
@@ -149,6 +153,7 @@ export interface Database {
           total_price?: number
           purchase_date?: string
           notes?: string | null
+          status?: OrderStatus
         }
       }
       inventory_adjustments: {

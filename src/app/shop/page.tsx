@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { createClientClient } from '@/lib/supabase/client';
+import { createClientSupabaseClient } from '@/lib/supabase/client';
 import { Database } from '@/lib/database.types';
 import { ConsumableCategory } from '@/lib/database.types';
 import { toast } from 'react-hot-toast';
@@ -14,7 +14,7 @@ export default function ShopPage() {
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<ConsumableCategory | null>(null);
   const [cart, setCart] = useState<{ [key: string]: number }>({});
-  const supabase = createClientClient();
+  const supabase = createClientSupabaseClient();
 
   useEffect(() => {
     fetchConsumables();
