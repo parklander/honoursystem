@@ -8,7 +8,7 @@ import { createClient } from '@/lib/supabase/client';
 interface UserWithRoles {
   id: string;
   full_name: string;
-  email: string;
+  email?: string;
   roles: string[];
   membership_status: string;
 }
@@ -85,7 +85,16 @@ export default function RoleManagementPage() {
           throw usersError;
         }
 
-        setUsers(usersData || []);
+        const data = usersData || [];
+        const usersDataMapped = data.map(user => ({
+          id: user.id,
+          full_name: user.full_name,
+          email: user.email || '',
+          roles: user.roles,
+          membership_status: user.membership_status
+        }));
+
+        setUsers(usersDataMapped);
 
         // Fetch roles enum values
         const { data: rolesData, error: rolesError } = await supabase
