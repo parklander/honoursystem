@@ -29,6 +29,11 @@ export default function ProfilePage() {
 
   const supabase = useMemo(() => createClientClient(), []);
 
+  const handleError = (error: Error | PostgrestError) => {
+    console.error('Error:', error);
+    toast.error(error.message || 'An error occurred');
+  };
+
   useEffect(() => {
     if (!user) {
       router.push('/login');
@@ -87,9 +92,8 @@ export default function ProfilePage() {
         }
 
         setProfile(data);
-      } catch (err) {
-        console.error('Full error:', err);
-        setError('Failed to load profile');
+      } catch (error) {
+        handleError(error as Error);
       } finally {
         setLoading(false);
       }
@@ -122,16 +126,11 @@ export default function ProfilePage() {
 
       if (error) throw error;
       setSuccess('Profile updated successfully');
-    } catch (err) {
-      setError('Failed to update profile');
-      console.error('Error updating profile:', err);
+    } catch (error) {
+      handleError(error as Error);
     } finally {
       setSaving(false);
     }
-  };
-
-  const handleError = (error: Error) => {
-    toast.error(error.message);
   };
 
   if (loading) {
