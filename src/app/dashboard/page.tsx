@@ -2,41 +2,18 @@
 
 import { useAuth } from '@/lib/auth/AuthContext';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import Image from 'next/image';
-import { createBrowserClient } from '@supabase/ssr';
 
 export default function DashboardPage() {
   const { user, signOut } = useAuth();
   const router = useRouter();
-  const [isAdmin, setIsAdmin] = useState(false);
-
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
 
   useEffect(() => {
     if (!user) {
       router.push('/login');
     }
   }, [user, router]);
-
-  useEffect(() => {
-    const checkAdminStatus = async () => {
-      if (!user) return;
-      
-      const { data } = await supabase
-        .from('user_profiles')
-        .select('roles')
-        .eq('id', user.id)
-        .single();
-      
-      setIsAdmin(data?.roles?.includes('admin') || false);
-    };
-    
-    checkAdminStatus();
-  }, [user, supabase]);
 
   if (!user) {
     return null;
