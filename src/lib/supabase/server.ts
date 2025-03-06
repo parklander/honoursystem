@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { Database } from '@/lib/database.types'
+import { CookieOptions } from '@supabase/ssr'
 
 export const createServerSupabaseClient = () => {
   const cookieStore = cookies()
@@ -13,11 +14,21 @@ export const createServerSupabaseClient = () => {
         get(name: string) {
           return cookieStore.get(name)?.value
         },
-        set(name: string, value: string, options: any) {
-          cookieStore.set({ name, value, ...options })
+        set(name: string, value: string, options: CookieOptions) {
+          try {
+            cookieStore.set({ name, value, ...options })
+          } catch (error) {
+            // Handle cookie errors in development
+            console.error('Error setting cookie:', error)
+          }
         },
-        remove(name: string, options: any) {
-          cookieStore.set({ name, value: '', ...options })
+        remove(name: string, options: CookieOptions) {
+          try {
+            cookieStore.set({ name, value: '', ...options })
+          } catch (error) {
+            // Handle cookie errors in development
+            console.error('Error removing cookie:', error)
+          }
         },
       },
     }
