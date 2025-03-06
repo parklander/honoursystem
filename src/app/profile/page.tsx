@@ -10,12 +10,14 @@ import { toast } from 'react-hot-toast';
 interface UserProfile {
   id: string;
   full_name: string;
+  roles: string[];
+  membership_status: string;
   phone_number: string;
   emergency_contact_name: string;
   emergency_contact_phone: string;
   emergency_contact_relationship: string;
-  preferred_contact_method: 'email' | 'phone' | 'discord';
-  notes: string;
+  notes?: string;
+  created_at?: string;
 }
 
 export default function ProfilePage() {
@@ -67,8 +69,7 @@ export default function ProfilePage() {
         
         const { data, error } = await supabase
           .from('user_profiles')
-          .select('id, full_name, roles, membership_status')
-          .eq('id', user?.id)
+          .select('*')
           .single();
 
         console.log('Profile query result:', {
@@ -91,7 +92,18 @@ export default function ProfilePage() {
           throw error;
         }
 
-        setProfile(data);
+        setProfile({
+          id: data.id,
+          full_name: data.full_name,
+          roles: data.roles,
+          membership_status: data.membership_status,
+          phone_number: data.phone_number,
+          emergency_contact_name: data.emergency_contact_name,
+          emergency_contact_phone: data.emergency_contact_phone,
+          emergency_contact_relationship: data.emergency_contact_relationship,
+          notes: data.notes,
+          created_at: data.created_at
+        });
       } catch (error) {
         handleError(error as Error);
       } finally {
@@ -119,7 +131,6 @@ export default function ProfilePage() {
           emergency_contact_name: profile.emergency_contact_name,
           emergency_contact_phone: profile.emergency_contact_phone,
           emergency_contact_relationship: profile.emergency_contact_relationship,
-          preferred_contact_method: profile.preferred_contact_method,
           notes: profile.notes,
         })
         .eq('id', user?.id);
@@ -231,22 +242,9 @@ export default function ProfilePage() {
             </div>
 
             <div className="bg-gray-800 p-6 rounded-lg shadow-xl">
-              <h2 className="text-xl font-semibold mb-4">Preferences</h2>
+              <h2 className="text-xl font-semibold mb-4">Notes</h2>
               
               <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1">Preferred Contact Method</label>
-                  <select
-                    value={profile.preferred_contact_method}
-                    onChange={(e) => setProfile({ ...profile, preferred_contact_method: e.target.value as 'email' | 'phone' | 'discord' })}
-                    className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="email">Email</option>
-                    <option value="phone">Phone</option>
-                    <option value="discord">Discord</option>
-                  </select>
-                </div>
-
                 <div>
                   <label className="block text-sm font-medium mb-1">Notes</label>
                   <textarea
