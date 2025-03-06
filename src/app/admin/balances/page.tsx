@@ -18,6 +18,9 @@ type UserBalance = {
   }>;
 };
 
+type UserProfileRow = Database['public']['Tables']['user_profiles']['Row'];
+type ConsumableRow = Database['public']['Tables']['consumables']['Row'];
+
 export default function AdminBalancesPage() {
   const [userBalances, setUserBalances] = useState<UserBalance[]>([]);
   const [loading, setLoading] = useState(true);

@@ -1,6 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
-import { Database } from '@/lib/database.types'
+import { Database } from '../database.types'
 
 export function createServerSupabaseClient() {
   const cookieStore = cookies()
@@ -13,23 +13,13 @@ export function createServerSupabaseClient() {
         get(name: string) {
           return cookieStore.get(name)?.value
         },
-        set(name: string, value: string, options: { path: string; maxAge?: number; domain?: string; secure?: boolean }) {
-          try {
-            cookieStore.set({ name, value, ...options })
-          } catch (error) {
-            // Handle route handlers which can't set cookies
-            console.warn('Unable to set cookie in route handler')
-          }
+        set(name: string, value: string, options: { expires?: Date }) {
+          cookieStore.set(name, value, options)
         },
-        remove(name: string, options: { path: string }) {
-          try {
-            cookieStore.set({ name, value: '', ...options })
-          } catch (error) {
-            // Handle route handlers which can't set cookies
-            console.warn('Unable to remove cookie in route handler')
-          }
-        },
-      },
+        remove(name: string, options: { expires?: Date }) {
+          cookieStore.delete(name)
+        }
+      }
     }
   )
 } 
