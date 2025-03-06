@@ -6,6 +6,20 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
+export type ConsumableCategory = 
+  | 'filament'
+  | 'resin'
+  | 'vinyl'
+  | 'blanks'
+  | 'wood'
+  | 'metal'
+  | 'plastic'
+  | 'electronics'
+  | 'fasteners'
+  | 'adhesives'
+  | 'finishing'
+  | 'other'
+
 export interface Database {
   public: {
     Tables: {
@@ -68,6 +82,102 @@ export interface Database {
           hierarchy_level?: number
           created_at?: string
           updated_at?: string
+        }
+      }
+      consumables: {
+        Row: {
+          id: string
+          name: string
+          description: string | null
+          price: number
+          unit: string
+          category: ConsumableCategory
+          stock_quantity: number
+          reorder_point: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          description?: string | null
+          price: number
+          unit: string
+          category: ConsumableCategory
+          stock_quantity?: number
+          reorder_point?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          description?: string | null
+          price?: number
+          unit?: string
+          category?: ConsumableCategory
+          stock_quantity?: number
+          reorder_point?: number
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      consumable_purchases: {
+        Row: {
+          id: string
+          user_id: string
+          consumable_id: string
+          quantity: number
+          total_price: number
+          purchase_date: string
+          notes: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          consumable_id: string
+          quantity: number
+          total_price: number
+          purchase_date?: string
+          notes?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          consumable_id?: string
+          quantity?: number
+          total_price?: number
+          purchase_date?: string
+          notes?: string | null
+        }
+      }
+      inventory_adjustments: {
+        Row: {
+          id: string
+          consumable_id: string
+          quantity_change: number
+          adjustment_type: string
+          adjusted_by: string
+          adjustment_date: string
+          notes: string | null
+        }
+        Insert: {
+          id?: string
+          consumable_id: string
+          quantity_change: number
+          adjustment_type: string
+          adjusted_by: string
+          adjustment_date?: string
+          notes?: string | null
+        }
+        Update: {
+          id?: string
+          consumable_id?: string
+          quantity_change?: number
+          adjustment_type?: string
+          adjusted_by?: string
+          adjustment_date?: string
+          notes?: string | null
         }
       }
     }
