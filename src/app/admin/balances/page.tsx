@@ -5,6 +5,21 @@ import { createClientSupabaseClient } from '@/lib/supabase/client';
 import { toast } from 'react-hot-toast';
 import { Database } from '@/lib/database.types'
 
+type Tables = Database['public']['Tables']
+type UserProfileRow = Tables['user_profiles']['Row']
+type ConsumableRow = Tables['consumables']['Row']
+
+interface UserProfile {
+  full_name: string;
+  roles: string[];
+  id: string;
+}
+
+interface Consumable {
+  name: string;
+  unit: string;
+}
+
 type UserBalance = {
   user_id: string;
   full_name: string;
@@ -18,18 +33,6 @@ type UserBalance = {
     unit: string;
   }>;
 };
-
-type UserProfileRow = Database['public']['Tables']['user_profiles']['Row'];
-type ConsumableRow = Database['public']['Tables']['consumables']['Row'];
-
-interface UserProfile {
-  full_name: string;
-}
-
-interface Consumable {
-  name: string;
-  unit: string;
-}
 
 export default function AdminBalancesPage() {
   const [userBalances, setUserBalances] = useState<UserBalance[]>([]);
@@ -73,6 +76,22 @@ export default function AdminBalancesPage() {
   const fetchBalanceData = async () => {
     try {
       console.log('Fetching unpaid balances...');
+
+      // Fetch user profiles with proper typing
+      const { data: profiles } = await supabase
+        .from('user_profiles')
+        .select('full_name, roles, id')
+        .returns<UserProfile[]>();
+
+      // Fetch consumables with proper typing
+      const { data: consumables } = await supabase
+        .from('consumables')
+        .select('name, unit')
+        .returns<Consumable[]>();
+
+      // Access the arrays safely
+      const userProfiles = profiles || [];
+      const consumableItems = consumables || [];
 
       // Get only unpaid purchases with consumable details
       const { data: purchases, error: purchasesError } = await supabase
@@ -187,7 +206,7 @@ export default function AdminBalancesPage() {
       // 1. Check admin status - modified to handle multiple profiles
       const { data: profiles, error: profileError } = await supabase
         .from('user_profiles')
-        .select<'user_profiles', UserProfile>('full_name')
+        .select('full_name, roles, id')
         .returns<UserProfile[]>();
 
       if (profileError) {
