@@ -10,13 +10,17 @@ export async function GET() {
     {
       cookies: {
         get(name: string) {
-          return cookies().get(name)?.value;
+          const cookieStore = cookies()
+          const cookie = cookieStore.get(name)
+          return cookie?.value
         },
         set(name: string, value: string, options: { expires?: Date }) {
-          cookies().set(name, value, options);
+          const cookieStore = cookies()
+          cookieStore.set(name, value, options)
         },
         remove(name: string, options: { expires?: Date }) {
-          cookies().delete(name);
+          const cookieStore = cookies()
+          cookieStore.delete(name)
         }
       }
     }

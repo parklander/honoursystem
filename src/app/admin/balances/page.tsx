@@ -22,6 +22,15 @@ type UserBalance = {
 type UserProfileRow = Database['public']['Tables']['user_profiles']['Row'];
 type ConsumableRow = Database['public']['Tables']['consumables']['Row'];
 
+interface UserProfile {
+  full_name: string;
+}
+
+interface Consumable {
+  name: string;
+  unit: string;
+}
+
 export default function AdminBalancesPage() {
   const [userBalances, setUserBalances] = useState<UserBalance[]>([]);
   const [loading, setLoading] = useState(true);
@@ -178,7 +187,8 @@ export default function AdminBalancesPage() {
       // 1. Check admin status - modified to handle multiple profiles
       const { data: profiles, error: profileError } = await supabase
         .from('user_profiles')
-        .select('roles');
+        .select<'user_profiles', UserProfile>('full_name')
+        .returns<UserProfile[]>();
 
       if (profileError) {
         console.error('Failed to verify admin status:', profileError);

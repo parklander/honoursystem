@@ -57,9 +57,9 @@ export default async function OrderHistoryPage() {
     total_price: item.total_price,
     quantity: item.quantity,
     user_id: item.user_id,
-    consumables: item.consumables ? {
-      name: item.consumables.name,
-      unit: item.consumables.unit
+    consumables: item.consumables && item.consumables[0] ? {
+      name: item.consumables[0].name,
+      unit: item.consumables[0].unit
     } : null
   }));
 
