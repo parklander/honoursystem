@@ -2,18 +2,19 @@
 
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { Database } from '@/lib/database.types';
+import { fetchUserOrders } from '@/app/lib/supabase/server-actions';
 
 type Tables = Database['public']['Tables'];
 type ConsumablePurchaseRow = Tables['consumable_purchases']['Row'];
 type ConsumableRow = Tables['consumables']['Row'];
 
-interface OrderWithConsumable {
+interface Order {
   id: string;
-  updated_at: string;
-  status: 'paid' | 'unpaid';
+  user_id: string;
   total_price: number;
   quantity: number;
-  user_id: string;
+  status: 'paid' | 'unpaid';
+  updated_at: string;
   consumables: {
     name: string;
     unit: string;
@@ -21,119 +22,79 @@ interface OrderWithConsumable {
 }
 
 export default async function OrderHistoryPage() {
-  const supabase = createServerSupabaseClient();
-  
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    return <div>Please log in to view your order history</div>;
-  }
-
-  const { data, error } = await supabase
-    .from('consumable_purchases')
-    .select(`
-      id,
-      updated_at,
-      status,
-      total_price,
-      quantity,
-      user_id,
-      consumables:consumables_id (
-        name,
-        unit
-      )
-    `)
-    .eq('user_id', user.id as string)
-    .order('updated_at', { ascending: false });
-
-  if (error) {
-    console.error('Error fetching orders:', error);
-    return <div>Error loading order history</div>;
-  }
-
-  const orders: OrderWithConsumable[] = (data || []).map(item => ({
-    id: item.id,
-    updated_at: item.updated_at,
-    status: item.status as 'paid' | 'unpaid',
-    total_price: item.total_price,
-    quantity: item.quantity,
-    user_id: item.user_id,
-    consumables: item.consumables && item.consumables[0] ? {
-      name: item.consumables[0].name,
-      unit: item.consumables[0].unit
-    } : null
-  }));
-
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white p-8">
-      <div className="container mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">My Orders</h1>
+  try {
+    const orders = await fetchUserOrders()
+    
+    return (
+      <main className="flex-1 p-6">
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-2xl font-semibold">Order History</h1>
         </div>
         
-        <div className="space-y-6">
-          {orders?.map((order) => (
-            <div 
-              key={order.id} 
-              className="bg-gray-800 border border-gray-700 rounded-lg p-6 shadow"
-            >
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <p className="text-gray-400">
-                    Order ID: <span className="text-gray-300">{order.id}</span>
-                  </p>
-                  <p className="text-gray-400">
-                    Date: <span className="text-gray-300">
-                      {new Date(order.updated_at).toLocaleDateString()}
-                    </span>
-                  </p>
-                </div>
-                <div className={`px-3 py-1 rounded-full text-sm font-medium ${
-                  order.status === 'paid'
-                    ? 'bg-green-900 text-green-300'
-                    : 'bg-yellow-900 text-yellow-300'
-                }`}>
-                  {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
-                </div>
+        <div className="bg-gray-800 rounded-lg p-6 shadow">
+          <div className="p-6">
+            {orders.length === 0 ? (
+              <p className="text-gray-500">No orders found.</p>
+            ) : (
+              <div className="divide-y divide-gray-200">
+                {orders.map((order: Order) => (
+                  <div key={order.id} className="py-4">
+                    <div className="flex justify-between items-center mb-2">
+                      <div className="flex items-center gap-4">
+                        <span className="text-sm text-gray-400 font-medium">
+                          Order #{order.id.slice(0, 8)}
+                        </span>
+                        <span className={`px-2 py-1 rounded-full text-sm ${
+                          order.status === 'paid' 
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                        </span>
+                      </div>
+                      <span className="text-sm text-gray-500">
+                        {new Date(order.updated_at).toLocaleDateString()}
+                      </span>
+                    </div>
+                    
+                    {order.consumables && (
+                      <div className="flex justify-between items-center text-sm">
+                        <div>
+                          <span className="font-medium">
+                            {order.quantity} {order.consumables.unit}
+                          </span>
+                          {' '}of{' '}
+                          <span className="text-gray-100">
+                            {order.consumables.name}
+                          </span>
+                        </div>
+                        <div className="font-medium">
+                          ${order.total_price.toFixed(2)}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
-              
-              <div className="mt-4">
-                <table className="w-full">
-                  <thead>
-                    <tr className="text-left text-gray-400">
-                      <th className="pb-3">Item</th>
-                      <th className="pb-3">Quantity</th>
-                      <th className="pb-3 text-right">Total</th>
-                    </tr>
-                  </thead>
-                  <tbody className="text-gray-300">
-                    <tr>
-                      <td className="py-2">{order.consumables?.name || 'Unknown Item'}</td>
-                      <td className="py-2">
-                        {order.quantity} {order.consumables?.unit || 'units'}
-                      </td>
-                      <td className="py-2 text-right">
-                        ${order.total_price.toFixed(2)}
-                      </td>
-                    </tr>
-                    <tr className="font-medium text-white">
-                      <td colSpan={2} className="pt-4 text-right">Total:</td>
-                      <td className="pt-4 text-right">
-                        ${order.total_price.toFixed(2)}
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          ))}
-          
-          {(!orders || orders.length === 0) && (
-            <div className="text-center text-gray-400 py-12 bg-gray-800 rounded-lg">
-              You haven't placed any orders yet
-            </div>
-          )}
+            )}
+          </div>
         </div>
-      </div>
-    </div>
-  );
+      </main>
+    )
+  } catch (error) {
+    console.error('Error fetching orders:', error)
+    return (
+      <main className="flex-1 p-6">
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-2xl font-semibold">Order History</h1>
+        </div>
+        <div className="bg-white rounded-lg shadow p-6">
+          <p className="text-red-500">
+            Error loading orders. Please try again later.
+            {error instanceof Error ? ` (${error.message})` : ''}
+          </p>
+        </div>
+      </main>
+    )
+  }
 } 

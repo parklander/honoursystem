@@ -20,8 +20,6 @@ export type ConsumableCategory =
   | 'finishing'
   | 'other'
 
-export type OrderStatus = 'unpaid' | 'paid';
-
 export interface Database {
   public: {
     Tables: {
@@ -128,33 +126,47 @@ export interface Database {
         Row: {
           id: string
           user_id: string
-          consumable_id: string
-          quantity: number
           total_price: number
-          purchase_date: string
-          notes: string | null
-          status: OrderStatus
+          quantity: number
+          status: 'paid' | 'unpaid'
+          consumables_id: string | null
+          created_at: string
+          updated_at: string
         }
         Insert: {
           id?: string
           user_id: string
-          consumable_id: string
-          quantity: number
           total_price: number
-          purchase_date?: string
-          notes?: string | null
-          status?: OrderStatus
+          quantity: number
+          status: 'paid' | 'unpaid'
+          consumables_id?: string | null
+          created_at?: string
+          updated_at?: string
         }
         Update: {
           id?: string
           user_id?: string
-          consumable_id?: string
-          quantity?: number
           total_price?: number
-          purchase_date?: string
-          notes?: string | null
-          status?: OrderStatus
+          quantity?: number
+          status?: 'paid' | 'unpaid'
+          consumables_id?: string | null
+          created_at?: string
+          updated_at?: string
         }
+        Relationships: [
+          {
+            foreignKeyName: "consumable_purchases_consumables_id_fkey"
+            columns: ["consumables_id"]
+            referencedRelation: "consumables"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consumable_purchases_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       inventory_adjustments: {
         Row: {
