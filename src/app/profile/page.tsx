@@ -3,7 +3,7 @@
 import { createClientClient } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { PostgrestError } from '@supabase/supabase-js';
 import { toast } from 'react-hot-toast';
 
@@ -27,7 +27,7 @@ export default function ProfilePage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  const supabase = createClientClient();
+  const supabase = useMemo(() => createClientClient(), []);
 
   useEffect(() => {
     if (!user) {
@@ -96,7 +96,7 @@ export default function ProfilePage() {
     };
 
     fetchProfile();
-  }, [user, router]);
+  }, [user, router, supabase]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -128,6 +128,10 @@ export default function ProfilePage() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleError = (error: Error) => {
+    toast.error(error.message);
   };
 
   if (loading) {
