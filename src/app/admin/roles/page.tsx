@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { PostgrestError } from '@supabase/supabase-js';
+import { toast } from 'react-hot-toast';
 
 interface UserWithRoles {
   id: string;
@@ -26,6 +27,13 @@ interface UserProfileRow {
   full_name: string;
   roles: string[];
   membership_status: string;
+}
+
+interface SupabaseError {
+  name?: string;
+  message?: string;
+  code?: string;
+  details?: string;
 }
 
 export default function RoleManagementPage() {
@@ -124,15 +132,15 @@ export default function RoleManagementPage() {
         setRoles(rolesData || []);
 
       } catch (err) {
+        const error = err as SupabaseError;
         console.error('Error details:', {
-          name: err.name,
-          message: err.message,
-          code: err.code,
-          details: err.details,
-          hint: err.hint,
-          stack: err.stack
+          name: error.name,
+          message: error.message,
+          code: error.code,
+          details: error.details
         });
-        setError(err.message || 'Failed to load data');
+        toast.error('Failed to load data');
+        setError(error.message || 'Failed to load data');
       } finally {
         setLoading(false);
       }
@@ -158,7 +166,9 @@ export default function RoleManagementPage() {
       ));
       setSuccess('Roles updated successfully');
     } catch (err) {
-      console.error('Error updating roles:', err);
+      const error = err as SupabaseError;
+      console.error('Error updating roles:', error);
+      toast.error('Failed to update user roles');
       setError('Failed to update roles');
     }
   };
