@@ -36,6 +36,8 @@ export default function Sidebar() {
 
   const links = [
     { href: '/dashboard', label: 'Dashboard' },
+    { href: '/shop', label: 'Shop' },
+    { href: '/orders', label: 'Orders' },
     { href: '/profile', label: 'Profile' },
     ...(isAdmin ? [{ href: '/admin/roles', label: 'Role Management' }] : []),
   ];
