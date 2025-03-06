@@ -14,7 +14,10 @@ interface OrderWithConsumable {
   total_price: number;
   quantity: number;
   user_id: string;
-  consumables: Pick<ConsumableRow, 'name' | 'unit'> | null;
+  consumables: {
+    name: string;
+    unit: string;
+  } | null;
 }
 
 export default async function OrderHistoryPage() {
@@ -34,7 +37,7 @@ export default async function OrderHistoryPage() {
       total_price,
       quantity,
       user_id,
-      consumables (
+      consumables:consumables_id (
         name,
         unit
       )
@@ -47,7 +50,18 @@ export default async function OrderHistoryPage() {
     return <div>Error loading order history</div>;
   }
 
-  const orders = (data || []) as OrderWithConsumable[];
+  const orders: OrderWithConsumable[] = (data || []).map(item => ({
+    id: item.id,
+    updated_at: item.updated_at,
+    status: item.status as 'paid' | 'unpaid',
+    total_price: item.total_price,
+    quantity: item.quantity,
+    user_id: item.user_id,
+    consumables: item.consumables ? {
+      name: item.consumables.name,
+      unit: item.consumables.unit
+    } : null
+  }));
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white p-8">
