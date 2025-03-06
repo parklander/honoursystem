@@ -7,7 +7,13 @@ type Tables = Database['public']['Tables'];
 type ConsumablePurchaseRow = Tables['consumable_purchases']['Row'];
 type ConsumableRow = Tables['consumables']['Row'];
 
-interface OrderWithConsumable extends Omit<ConsumablePurchaseRow, 'consumables'> {
+interface OrderWithConsumable {
+  id: string;
+  updated_at: string;
+  status: 'paid' | 'unpaid';
+  total_price: number;
+  quantity: number;
+  user_id: string;
   consumables: Pick<ConsumableRow, 'name' | 'unit'> | null;
 }
 
@@ -22,7 +28,12 @@ export default async function OrderHistoryPage() {
   const { data, error } = await supabase
     .from('consumable_purchases')
     .select(`
-      *,
+      id,
+      updated_at,
+      status,
+      total_price,
+      quantity,
+      user_id,
       consumables (
         name,
         unit

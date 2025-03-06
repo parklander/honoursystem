@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { createClientSupabaseClient } from '@/lib/supabase/client';
 import { toast } from 'react-hot-toast';
+import { Database } from '@/lib/database.types'
 
 type UserBalance = {
   user_id: string;

@@ -12,13 +12,22 @@ export async function GET() {
     {
       cookies: {
         get(name: string) {
-          return cookieStore.get(name)?.value;
+          const cookie = cookieStore.get(name);
+          return cookie?.value;
         },
         set(name: string, value: string, options: { expires?: Date }) {
-          cookieStore.set(name, value, options);
+          try {
+            cookieStore.set(name, value, options);
+          } catch (error) {
+            // Handle cookie error
+          }
         },
         remove(name: string, options: { expires?: Date }) {
-          cookieStore.delete(name);
+          try {
+            cookieStore.delete(name);
+          } catch (error) {
+            // Handle cookie error
+          }
         }
       }
     }
