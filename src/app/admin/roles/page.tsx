@@ -19,6 +19,14 @@ interface Role {
   hierarchy_level: number;
 }
 
+// Add type for the raw data from Supabase
+interface UserProfileRow {
+  id: string;
+  full_name: string;
+  roles: string[];
+  membership_status: string;
+}
+
 export default function RoleManagementPage() {
   const { user } = useAuth();
   const router = useRouter();
@@ -70,13 +78,12 @@ export default function RoleManagementPage() {
         }
 
         // Fetch all users with their roles
-        const { data: usersData, error: usersError } = await supabase
+        const { data, error: usersError } = await supabase
           .from('user_profiles')
-          .select('id, full_name, roles, membership_status')
-          .order('full_name');
+          .select('id, full_name, roles, membership_status') as { data: UserProfileRow[] | null, error: any };
 
         console.log('Users data:', {
-          data: usersData,
+          data: data,
           error: usersError
         });
 
@@ -85,16 +92,14 @@ export default function RoleManagementPage() {
           throw usersError;
         }
 
-        const data = usersData || [];
-        const usersDataMapped = data.map(user => ({
+        const usersData = data?.map((user: UserProfileRow) => ({
           id: user.id,
           full_name: user.full_name,
-          email: user.email || '',
           roles: user.roles,
           membership_status: user.membership_status
-        }));
+        })) || [];
 
-        setUsers(usersDataMapped);
+        setUsers(usersData);
 
         // Fetch roles enum values
         const { data: rolesData, error: rolesError } = await supabase
