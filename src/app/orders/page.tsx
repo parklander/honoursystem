@@ -1,6 +1,11 @@
 'use server';
 
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { Database } from '@/lib/database.types';
+
+type ConsumablePurchase = Database['public']['Tables']['consumable_purchases']['Row'] & {
+  consumables: Database['public']['Tables']['consumables']['Row'] | null;
+};
 
 export default async function OrderHistoryPage() {
   const supabase = createServerSupabaseClient();
@@ -24,7 +29,8 @@ export default async function OrderHistoryPage() {
       )
     `)
     .eq('user_id', user.id)
-    .order('updated_at', { ascending: false });
+    .order('updated_at', { ascending: false })
+    .returns<ConsumablePurchase[]>();
 
   if (ordersError) {
     console.error('Error fetching orders:', ordersError);
